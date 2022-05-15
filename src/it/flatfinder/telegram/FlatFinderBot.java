@@ -46,7 +46,7 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	private FlatFinderBotCommonFunctions telegramFunctions = new FlatFinderBotCommonFunctions();
 	
 	public String getBotToken() {
-		return "5370272247:AAFQsbE1V0Q18T0Ds4cebPN-F9vdfgnvOSs";
+		return "";
 	}
 
 	@Override
