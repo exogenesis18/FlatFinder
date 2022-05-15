@@ -132,18 +132,6 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 		        }
 	    		
 	    	}
-	    	else if(update.getMessage().getText().equalsIgnoreCase("Tette nude")) {
-	    		
-		        	SendMessage message = telegramFunctions.sendMessage(update, "Non sono una BOTtana");
-	    		
-                
-		        try {
-		            execute(message);
-		        } catch (TelegramApiException e) {
-		            e.printStackTrace();
-		        }
-	    		
-	    	}
 	    	else if(selezioneMinPrice) {
 	    		
 	    		SendMessage message;
