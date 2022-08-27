@@ -1,5 +1,6 @@
 package it.flatfinder.mapper;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,7 +19,7 @@ import it.flatfinder.mapper.utils.CommonFunctions;
 
 public class ImmobiliareMapper extends Mapper{
 	
-	public List<Building> getBuildings(){
+	public List<Building> getBuildings() throws IOException, InterruptedException{
 		
 		Caller caller = new Caller();
 		List<Building> buildings = new LinkedList<Building>();

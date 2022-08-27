@@ -1,6 +1,9 @@
 package it.flatfinder.telegram;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +49,100 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	private FlatFinderBotCommonFunctions telegramFunctions = new FlatFinderBotCommonFunctions();
 	
 	public String getBotToken() {
-		return "";
+		return "5370272247:AAFQsbE1V0Q18T0Ds4cebPN-F9vdfgnvOSs";
+	}
+	
+	private void cercaAppartamenti(Long chatId) {
+		
+		SendMessage message = null;
+        
+        if(!buildings.keySet().contains(chatId))
+        	buildings.put(chatId, new LinkedList<Building>());
+       
+        if(userFilter.get(chatId) == null) {
+        	message = telegramFunctions.sendMessage(chatId, "Non hai selezionato nessun filtro, usa il comando /seleziona_filtri per cominciare");
+        	
+	        try {
+	            execute(message);
+	        } catch (TelegramApiException e) {
+	            e.printStackTrace();
+	        }
+        }
+        else {
+        	
+			UniversalMapper mapper = null;
+			try {
+				mapper = new UniversalMapper();
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
+			Map<Long,List<Building>> newBuildings = new HashMap<>();
+			newBuildings.put(chatId, new LinkedList<Building>());
+
+			//ritorno tutti gli appartamenti
+			List<Building> buildingsList = mapper.getBuildings();
+			
+			
+			//itero per gli appartamenti appena ritornati
+			for(Building building: buildingsList)
+				//se gli appartamenti ritornati in precedenza con contengono il nuovo appartamento lo metto in newBuildings
+				if(!buildings.get(chatId).contains(building)) {
+					List<Building> list = newBuildings.get(chatId);
+					list.add(building);
+					newBuildings.put(chatId, list);
+				}
+			
+			//questa lista conterrà gli appartamenti nuovi e filtrati
+			List<Building> newFilteredBuildingsList = new LinkedList<>();
+			
+			//filtro gli appartamenti in newBuildings e li aggiungo agli appartamenti da ritornare
+			for(Building building: new UserFilterApplier(newBuildings.get(chatId), userFilter.get(chatId)).applyFilter()) {
+				newFilteredBuildingsList.add(building);
+			}
+			
+			List<Building> finalList = buildings.get(chatId);
+			finalList.addAll(newFilteredBuildingsList);
+			
+			//aggiungo i nuovi filtrati appartamenti
+			buildings.put(chatId, finalList);
+			
+			Calendar calendar = Calendar.getInstance();
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+			System.out.println("AGGIORNAMENTO: " + formatter.format(calendar.getTime()) + " trovati " + newFilteredBuildingsList.size() + " appartamenti");
+					
+			if(newFilteredBuildingsList.isEmpty()) {
+	        	message = telegramFunctions.sendMessage(chatId, "AGGIORNAMENTO: " + formatter.format(calendar.getTime()) + "\nNon ci sono novità \u2639");
+	        
+				try {
+		            execute(message);
+		        } catch (TelegramApiException e) {
+		            e.printStackTrace();
+		        }
+			}
+			
+			else {
+				for(Building building: newFilteredBuildingsList) {
+					message = telegramFunctions.sendMessage(chatId, "AGGIORNAMENTO: " + formatter.format(calendar.getTime()) + "\n" + building.toString());
+					
+			        try {
+			            execute(message);
+			        } catch (TelegramApiException e) {
+			            e.printStackTrace();
+			        }
+				}
+			 }
+        }
+		
+	}
+	
+	public void sendUpdates() {
+		
+		Calendar calendar = Calendar.getInstance();
+		if(calendar.get(Calendar.HOUR_OF_DAY) < 20 && calendar.get(Calendar.HOUR_OF_DAY) > 8)
+			for(Long chatId: buildings.keySet())
+				cercaAppartamenti(chatId);
+		
 	}
 
 	@Override
@@ -57,11 +153,11 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	    if (update.hasMessage() && update.getMessage().hasText()) {
 	    	
 	    	Long chatId = update.getMessage().getChatId();
-	    	System.out.println(chatId + " (" + update.getMessage().getFrom().getFirstName() + ")" + " ha inviato " + update.getMessage().getText());
+	    	System.out.println(chatId + " (" + update.getMessage().getFrom().getFirstName() + ", " + update.getMessage().getFrom().getUserName() + ")" + " ha inviato " + update.getMessage().getText());
 	    	
 	    	if(update.getMessage().getText().equals("/start") || update.getMessage().getText().equals("/help")) {
 				
-				SendMessage message = telegramFunctions.sendMessage(update, "Ciao! Seleziona i filtri di ricerca tramite il comando /seleziona_filtri");
+				SendMessage message = telegramFunctions.sendMessage(chatId, "Ciao! Seleziona i filtri di ricerca tramite il comando /seleziona_filtri");
 				
 	        	try {
 					execute(message);
@@ -72,38 +168,13 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	    		
 	    	}
 	    	else if(update.getMessage().getText().equals("/cerca_appartamenti")) {
-				
-		        SendMessage message;
-		       
-		        if(userFilter.get(chatId) == null) {
-		        	message = telegramFunctions.sendMessage(update, "Non hai selezionato nessun filtro, usa il comando /seleziona_filtri per cominciare");
-		        	
-			        try {
-			            execute(message);
-			        } catch (TelegramApiException e) {
-			            e.printStackTrace();
-			        }
-		        }
-		        else {
-		        	
-					UniversalMapper mapper = new UniversalMapper();
-					buildings.put(chatId, mapper.getBuildings());
-										
-					 for (Building elem: new UserFilterApplier(buildings.get(chatId), userFilter.get(chatId)).applyFilter()) {
-			        	message = telegramFunctions.sendMessage(update, elem.toString());
-			        	
-				        try {
-				            execute(message);
-				        } catch (TelegramApiException e) {
-				            e.printStackTrace();
-				        }
-					 }
-		        }
+	    		
+				cercaAppartamenti(chatId);
 		        
 		    }
 	    	else if(update.getMessage().getText().equals("/seleziona_filtri")) {
 	    		
-	    		SendMessage message = telegramFunctions.sendMessage(update, "Seleziona contratto");
+	    		SendMessage message = telegramFunctions.sendMessage(chatId, "Seleziona contratto");
                 message.setReplyMarkup(telegramFunctions.addInlineKeyboardMarkup("Indifferente", "contratto_indifferente", "1", "Affitto", "contratto_affitto", "2", "Vendita", "contratto_vendita", "2"));
                 
 		        try {
@@ -121,9 +192,9 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	    		SendMessage message = new SendMessage();
 	    		
 	    		if(userFilter.get(chatId) == null)
-		        	message = telegramFunctions.sendMessage(update, "Non hai selezionato nessun filtro, usa il comando /seleziona_filtri per cominciare");
+		        	message = telegramFunctions.sendMessage(chatId, "Non hai selezionato nessun filtro, usa il comando /seleziona_filtri per cominciare");
 	    		else
-	    			message = telegramFunctions.sendMessage(update, userFilter.get(chatId).toString());
+	    			message = telegramFunctions.sendMessage(chatId, userFilter.get(chatId).toString());
                 
 		        try {
 		            execute(message);
@@ -142,10 +213,10 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 		    		userFilter.get(chatId).setMinPrice(Integer.parseInt(update.getMessage().getText()));
 		    		selezioneMinPrice = false;
 		    		selezioneMaxPrice = true;
-		        	message = telegramFunctions.sendMessage(update, "Qual è prezzo massimo? (sono consentiti valori da 1 a 10000000 e non minori del prezzo minimo)\nDigita 0 se è indifferente");
+		        	message = telegramFunctions.sendMessage(chatId, "Qual è prezzo massimo? (sono consentiti valori da 1 a 10000000 e non minori del prezzo minimo)\nDigita 0 se è indifferente");
 	    		}
 	    		catch(Exception e) {
-		        	message = telegramFunctions.sendMessage(update, "Il valore inserito non è valido, riprova");
+		        	message = telegramFunctions.sendMessage(chatId, "Il valore inserito non è valido, riprova");
 	    		}
 	    		
 		        try {
@@ -164,12 +235,12 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	    				throw new Exception();
 		    		userFilter.get(chatId).setMaxPrice(Integer.parseInt(update.getMessage().getText()));
 		    		selezioneMaxPrice = false;
-		        	message = telegramFunctions.sendMessage(update, "Quante stanze deve avere come minimo?");
+		        	message = telegramFunctions.sendMessage(chatId, "Quante stanze deve avere come minimo?");
 	                message.setReplyMarkup(telegramFunctions.addInlineKeyboardMarkup("Indifferente", "min_stanze_indifferente","1", "1", "min_stanze_una", "2", "2", "min_stanze_due","2", "3", "min_stanze_tre", "2","4", "min_stanze_quattro","3","5", "min_stanze_cinque","3","5+", "min_stanze_cinque_plus","3"));
 
 	    		}
 	    		catch(Exception e) {
-		        	message = telegramFunctions.sendMessage(update, "Il valore inserito non è valido, riprova");
+		        	message = telegramFunctions.sendMessage(chatId, "Il valore inserito non è valido, riprova");
 	    		}
 	    		
 		        try {
@@ -189,10 +260,10 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 		    		userFilter.get(chatId).setMinSurface(Integer.parseInt(update.getMessage().getText()));
 		    		selezioneMinSurface = false;
 		    		selezioneMaxSurface = true;
-		        	message = telegramFunctions.sendMessage(update, "Qual è la grandezza massima in metri quadrati? (sono consentiti valori fra 1 e 5000 e non minori della grandezza minima)\nDigita 0 se è indifferente");
+		        	message = telegramFunctions.sendMessage(chatId, "Qual è la grandezza massima in metri quadrati? (sono consentiti valori fra 1 e 5000 e non minori della grandezza minima)\nDigita 0 se è indifferente");
 	    		}
 	    		catch(Exception e) {
-		        	message = telegramFunctions.sendMessage(update, "Il valore inserito non è valido, riprova");
+		        	message = telegramFunctions.sendMessage(chatId, "Il valore inserito non è valido, riprova");
 	    		}
 	    		
 		        try {
@@ -211,12 +282,12 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	    				throw new Exception();
 		    		userFilter.get(chatId).setMaxSurface(Integer.parseInt(update.getMessage().getText()));
 		    		selezioneMaxSurface = false;
-		        	message = telegramFunctions.sendMessage(update, "Agenzia o privato?");
+		        	message = telegramFunctions.sendMessage(chatId, "Agenzia o privato?");
 	                message.setReplyMarkup(telegramFunctions.addInlineKeyboardMarkup("Indifferente", "agenzia_indifferente","1", "Agenzia", "agenzia_si", "2", "Privato", "agenzia_no", "2"));
 
 	    		}
 	    		catch(Exception e) {
-		        	message = telegramFunctions.sendMessage(update, "Il valore inserito non è valido, riprova");
+		        	message = telegramFunctions.sendMessage(chatId, "Il valore inserito non è valido, riprova");
 	    		}
 	    		
 		        try {

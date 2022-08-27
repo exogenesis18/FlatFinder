@@ -144,13 +144,12 @@ public class Building {
 	
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
-		return "Immobile in " + contract + " a" + location + 
+		return "Immobile in " + contract + " a " + location + 
 				"\nCategoria: " + category +
 				"\nTitolo: " + title +
 				"\nPrezzo: " + (trattativaRiservata ? "trattativa riservata" : "€ " + price) + 
 				"\nStanze: " + rooms + (moreThanFiveRooms ? "+" : "") +
-				"\nBagni: " + bathrooms +
+				"\nBagni: " + (bathrooms != 0 ? bathrooms : "ND") +
 				"\nSuperficie: " + surface + " m^2" +
 				"\nAgenzia: " + agency + 
 				"\n" + url;
@@ -158,7 +157,6 @@ public class Building {
 	
 	@Override
 	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
 		if(obj instanceof Building && ((Building) obj).getSite().equals(site) && ((Building) obj).getId().equals(id)) {
 			return true;	
 		}

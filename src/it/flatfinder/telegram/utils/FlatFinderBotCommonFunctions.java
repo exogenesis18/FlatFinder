@@ -11,11 +11,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 public class FlatFinderBotCommonFunctions {
 	
-	public SendMessage sendMessage(Update update, String text) {
+	public SendMessage sendMessage(Long chatId, String text) {
 		
         SendMessage message = new SendMessage(); 
 		
-		message.setChatId(update.getMessage().getChatId().toString());
+		message.setChatId(chatId.toString());
     	message.setText(text);
     	
     	return message;
