@@ -49,7 +49,7 @@ public class FlatFinderBot extends TelegramLongPollingBot{
 	private FlatFinderBotCommonFunctions telegramFunctions = new FlatFinderBotCommonFunctions();
 	
 	public String getBotToken() {
-		return "insert_token";
+		return "5370272247:AAFQsbE1V0Q18T0Ds4cebPN-F9vdfgnvOSs";
 	}
 	
 	private void cercaAppartamenti(Long chatId) {

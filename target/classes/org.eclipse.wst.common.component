@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+        
+    <wb-module deploy-name="FlatFinder">
+        <wb-resource deploy-path="/" source-path="/FlatFinder/src" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/.settings"/>
+                
+        <property name="context-root" value="FlatFinder"/>
+                
+        <property name="java-output-path" value="/FlatFinder/target/classes"/>
+            
+    </wb-module>
+    
+</project-modules>

@@ -41,7 +41,7 @@ public class Caller {
 
 		List<JSONObject> jsons = new LinkedList<JSONObject>();
 		String url = "";
-		int i = 19;
+		int i = 1;
 		String nextPage = "";
 
 		while (!nextPage.equals("null")) {
@@ -74,7 +74,7 @@ public class Caller {
 
 		List<JSONObject> jsons = new LinkedList<JSONObject>();
 		String url = "";
-		int i = 14;
+		int i = 1;
 		String nextPage = "";
 
 		while (!nextPage.equals("null")) {
